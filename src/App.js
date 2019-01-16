@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
+import Log from './Log.js';
 
 class App extends Component {
   constructor(props){
     super(props);
     this.state = {
       clickOrder: [],
+      sortedImages: [0, 1, 2, 3, 4, 5, 6, 7],
       images: [
         {
           id: 0,
@@ -58,88 +60,96 @@ class App extends Component {
     }
   }
 
+  
   componentDidMount(){
   
-    console.log("SessionStorage at Mount", sessionStorage.order);
     // set clickOrder in State based on SessionStorage.order if set
-
-    let order = []
-
+    let order = [];
+    
     if(sessionStorage.order){
       order = sessionStorage.order.split(",").map(element => parseInt(element));
-
-      this.setState((state)=>{
-        return {clickOrder: order}
-      })
-    } else {
-      this.setState((state)=> {
-        return {clickOrder: order}
-      })
     }
-    console.log("State on Mount", this.state.clickOrder);
+
+    this.setState((state)=>{
+      return {clickOrder: order}
+    })
+
+    // console.log("Session on Mount:", sessionStorage.order)
+
+    // set sorted order in state based on ClickOrder and RemainingImages
+    let sortedImages = [...order, ...this.remainingImages(order)];
+    this.setState({sortedImages: sortedImages})
   }
 
-  handleClick = (event) => {
-    console.log("1) Check Session Order before handle click:", sessionStorage.order)
+  remainingImages = (order) => {
+    return (
+      this.state.images.filter((element) => {
+        if (!order.includes(element.id)) {
+          return element
+        }
+      }).map(element => element.id)
+    )
+  }
 
-    // get data-id of event
-    let eventId = event.target.getAttribute('data-id')
-    console.log("2) EventId:", eventId);
 
-    // make sure id is set to a number
-    let id = parseInt(eventId,10)
-    
+  upClickCount = (id) => {
+    this.setState((state) => {
+      return {
+         images: state.images.map((image) => {
+           if(image.id === id){
+               image.clickCount++;
+               return image;
+           } else {
+             return image;
+           } 
+         })
+       } 
+     })
+  }
+
+  updateClickOrder = (eventId, id) => {
     // make sure id is not null (clicked on something other than an image) - cannot use id since 0 as a number is false
     // check that id is not already in the clickOrder array
     // add id to array if is is not already there and update SessionStorage
-    console.log("3) clickOrder Includes ID?:", this.state.clickOrder.includes(id));
-
     if(eventId && !this.state.clickOrder.includes(id)){
       this.setState((state) => {
         let order = [...state.clickOrder, id];
         sessionStorage.setItem("order", order);
-        console.log("4) Storage inside Handle Click If statement", sessionStorage.order);
         return {clickOrder: order}
       })
-   
     }
+  }
+
+  handleClick = (event) => {
+    // get data-id of event
+    let eventId = event.target.getAttribute('data-id')
+
+    // make sure id is set to a number
+    let id = parseInt(eventId,10)
+    
+    // update clickOrder
+    this.updateClickOrder(eventId, id);
+    
     // up the clickCount on the image in state 
-    this.setState((state) => {
-       return {
-          images: state.images.map((image) => {
-            if(image.id === id){
-                image.clickCount++;
-                return image;
-            } else {
-              return image;
-            } 
-          })
-      }
-    })
-  
-    console.log("5) clickOrder", this.state.clickOrder)
-    console.log("6) images", this.state.images)
+    this.upClickCount(id);
   }
 
 
-  render() {
-    console.log("State on Render", this.state.clickOrder);
-    console.log("Storage on Render", sessionStorage.order);
+  render() { 
 
-
-    let arrayOfCounts = this.state.images.map((image) => (
-      {id: image.id, count: image.clickCount}
-    )).sort((imageA, imageB) => (imageA.count - imageB.count))
+    console.log("Sorted Images:", this.state.sortedImages)
 
     return (
       <div className="wrapper">
          <div className="grid-container" onClick={this.handleClick} >
-            {this.state.images.map((image, i) => (
-              <div key={i}><img src={image.source} alt={image.alt} data-id={image.id}/></div>
+            {this.state.sortedImages.map((id, i) => (
+              <div key={i}><img src={this.state.images[id].source} alt={this.state.images[id].alt} data-id={id}/></div>
             ))}
         </div>
         <div>
-            
+            <Log
+            images={this.state.images}
+            />
         </div>
       </div>
     );
