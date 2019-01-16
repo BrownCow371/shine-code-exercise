@@ -58,11 +58,46 @@ class App extends Component {
     }
   }
 
+  handleClick = (event) => {
+    // get data-id of event
+    let eventId = event.target.getAttribute('data-id')
+    console.log("EventId:", eventId);
+
+    // make sure id is set to a number
+    let id = parseInt(eventId,10)
+    
+    // make sure id is not null (clicked on something other than an image) - cannot use id since 0 as a number is false
+    // check that id is not already in the clickOrder array
+    // add id to array if is is not already there
+    console.log("clickOrder Includes:", this.state.clickOrder.includes(id));
+
+    if(eventId && !this.state.clickOrder.includes(id)){
+      this.setState({
+        clickOrder: [...this.state.clickOrder, id]
+      })
+    }
+    // up the clickCount on the image in state 
+    this.setState({
+      images: this.state.images.map((image) => {
+        if(image.id === id){
+            image.clickCount++;
+            return image;
+        } else {
+          return image;
+        } 
+      })
+    })
+    
+    console.log("clickOrder", this.state.clickOrder)
+    console.log("images", this.state.images)
+  }
+
+
   render() {
 
     return (
       <div className="wrapper">
-         <div className="grid-container" >
+         <div className="grid-container" onClick={this.handleClick} >
             {this.state.images.map((image, i) => (
               <div key={i}><img src={image.source} alt={image.alt} data-id={image.id}/></div>
             ))}
