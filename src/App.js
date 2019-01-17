@@ -5,7 +5,6 @@ class App extends Component {
   constructor(props){
     super(props);
     this.state = {
-      
       sortedImages: [],
       images: [
         {
@@ -88,9 +87,7 @@ class App extends Component {
         return {images: JSON.parse(sessionStorage.images)}
       })
     }
-    sessionStorage.setItem("state", JSON.stringify(this.state))
-    console.log("session state", JSON.parse(sessionStorage.state))
-
+   
     // Clear sessionStorage OrderClicked so it is reset and can be rebuilt for next reload
     sessionStorage.removeItem("orderClicked");
   }
