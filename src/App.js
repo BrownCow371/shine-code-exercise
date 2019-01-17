@@ -6,7 +6,7 @@ class App extends Component {
     super(props);
     this.state = {
       clickOrder: [],
-      sortedImages: [0, 1, 2, 3, 4, 5, 6, 7],
+      sortedImages: [],
       images: [
         {
           id: 0,
@@ -60,35 +60,72 @@ class App extends Component {
     }
   }
 
+  splitSessionStorage = (storage) => {
+    return storage.split(",").map(element => parseInt(element, 10))
+  }
   
   componentDidMount(){
   
-    // set clickOrder in State based on SessionStorage.order if set
-    let order = [];
+    // set orderClicked based on SessionStorage.order, if set
+    let orderClicked = [];
     
-    if(sessionStorage.order){
-      order = sessionStorage.order.split(",").map(element => parseInt(element));
+    if(sessionStorage.orderClicked){
+      orderClicked = this.splitSessionStorage(sessionStorage.orderClicked);
+      // sessionStorage.clear();
+      console.log("orderClicked inside Mount:", orderClicked)
     }
 
-    this.setState((state)=>{
-      return {clickOrder: order}
-    })
+    // this.setState((state)=>{
+    //   sessionStorage.clear();
+    //   return {clickOrder: order}
+    // })
 
     // console.log("Session on Mount:", sessionStorage.order)
 
-    // set sorted order in state based on ClickOrder and RemainingImages
-    let sortedImages = [...order, ...this.remainingImages(order)];
-    this.setState({sortedImages: sortedImages})
+    // set sorted order in state based on ClickOrder and RemainingImages 
+    // and store sortedImages in sessionStorage
+    console.log("session sorted before set in mount:", sessionStorage.sortedImages)
+
+    let sortedImages = [...orderClicked, ...this.remainingImages(orderClicked)];
+    
+    sessionStorage.setItem("sortedImages", sortedImages);
+    sessionStorage.removeItem("orderClicked");
+
+    this.setState((state) => {
+      return {sortedImages: sortedImages}
+    })
+    console.log("SortedImages inside Mount:", sortedImages)
   }
 
+  // remainingImages = (order) => {
+  //   return (
+  //     this.state.images.filter((element) => {
+  //       if (!order.includes(element.id)) {
+  //         return element
+  //       }
+  //     }).map(element => element.id)
+  //   )
+  // }
+
+  // this is not working - need to modify so that non-clicked image order is maintained on Reload
   remainingImages = (order) => {
+    if (sessionStorage.sortedImages) {
+      let sorted = this.splitSessionStorage(sessionStorage.sortedImages);
+      console.log("where is my zero in remaining:", sorted);
+      console.log("Order inside Remaining:", order);
+      let remaining =  sorted.filter((id) => (!order.includes(id)))
+        //   if (!order.includes(id)) {
+        //     console.log("Inside filter:", id, !order.includes(id))
+        //     return id;
+        //   }
+        // })
+        console.log("remaining:", remaining)
+        return remaining;
+    } else {
     return (
-      this.state.images.filter((element) => {
-        if (!order.includes(element.id)) {
-          return element
-        }
-      }).map(element => element.id)
-    )
+      this.state.images.filter((element) => (!order.includes(element.id))).map(element => element.id)
+
+    )}
   }
 
 
@@ -107,18 +144,35 @@ class App extends Component {
      })
   }
 
+  // updateClickOrder = (eventId, id) => {
+  //   // make sure id is not null (clicked on something other than an image) - cannot use id since 0 as a number is false
+  //   // check that id is not already in the clickOrder array
+  //   // add id to array if is is not already there and update SessionStorage
+  //   if(eventId && !this.state.clickOrder.includes(id)){
+  //     this.setState((state) => {
+  //       let order = [...state.clickOrder, id];
+  //       sessionStorage.setItem("order", order);
+  //       console.log("Order:", order);
+  //       return {clickOrder: order}
+  //     })
+  //   }
+  // }
+
   updateClickOrder = (eventId, id) => {
-    // make sure id is not null (clicked on something other than an image) - cannot use id since 0 as a number is false
-    // check that id is not already in the clickOrder array
-    // add id to array if is is not already there and update SessionStorage
-    if(eventId && !this.state.clickOrder.includes(id)){
-      this.setState((state) => {
-        let order = [...state.clickOrder, id];
-        sessionStorage.setItem("order", order);
-        return {clickOrder: order}
-      })
+      let orderClicked = [];
+
+      if (sessionStorage.orderClicked){
+        orderClicked = this.splitSessionStorage(sessionStorage.orderClicked)
+      }
+
+      if(eventId && !orderClicked.includes(id)){
+        orderClicked.push(id); 
+        sessionStorage.setItem("orderClicked", orderClicked);
+        console.log("Order:", orderClicked);
+        // return {clickOrder: order}
+      }
     }
-  }
+  
 
   handleClick = (event) => {
     // get data-id of event
