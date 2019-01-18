@@ -23,7 +23,7 @@ code {
   /* max-width: 960px;
   min-height: 600px; */
   padding: 2.25%;
-  width: 80%;
+  width: 75%;
 }
 
 /* ----Grid Fomatting ---- */
@@ -36,4 +36,10 @@ code {
 
 .grid-container > div {
   text-align: center;
+  
+}
+
+img {
+  border: 1px solid;
+  padding: 20 px;
 }
